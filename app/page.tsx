@@ -10,7 +10,7 @@ import {
   puedeVerResultadoVenta,
 } from "@/lib/tabulador/calculations"
 import { LEYENDA_IMPUESTOS } from "@/lib/tabulador/constants"
-import { formatMXN } from "@/lib/tabulador/format"
+import { formatMXN, formatThousands, sanitizeNumericInput } from "@/lib/tabulador/format"
 import { downloadTicketAsImage } from "@/lib/tabulador/ticket-image"
 import type {
   FueConBrokerExterno,
@@ -33,6 +33,7 @@ export default function Home() {
   const [fueConBrokerExterno, setFueConBrokerExterno] = useState<FueConBrokerExterno | null>(null)
   const [fueEnEquipoConOtroAsesor, setFueEnEquipoConOtroAsesor] = useState<OpcionSiNo | null>(null)
   const [tipoAsesorEquipo, setTipoAsesorEquipo] = useState<TipoAsesorEquipo>("na")
+  const costoFormateado = formatThousands(costo)
 
   const baseMontos = useMemo(() => getBaseMontos(costo, comision), [comision, costo])
 
@@ -127,6 +128,10 @@ export default function Home() {
 
   const descargarTicket = () => {
     downloadTicketAsImage(ticketTexto)
+  }
+
+  const handleCostoChange = (value: string) => {
+    setCosto(sanitizeNumericInput(value))
   }
 
   const reiniciar = () => {
@@ -233,10 +238,11 @@ export default function Home() {
                   <label className="block">
                     <span className="mb-2 block text-sm font-medium text-slate-700">Costo (MXN)</span>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       placeholder="Ej. 18000"
-                      value={costo}
-                      onChange={(e) => setCosto(e.target.value)}
+                      value={costoFormateado}
+                      onChange={(e) => handleCostoChange(e.target.value)}
                       className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                     />
                   </label>
@@ -279,10 +285,11 @@ export default function Home() {
                   <label className="block">
                     <span className="mb-2 block text-sm font-medium text-slate-700">Costo (MXN)</span>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       placeholder="Ej. 2800000"
-                      value={costo}
-                      onChange={(e) => setCosto(e.target.value)}
+                      value={costoFormateado}
+                      onChange={(e) => handleCostoChange(e.target.value)}
                       className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                     />
                   </label>
