@@ -21,6 +21,7 @@ import type {
 } from "@/lib/tabulador/types"
 
 export default function Home() {
+  const [mostrarBienvenida, setMostrarBienvenida] = useState(true)
   const [tipoOperacion, setTipoOperacion] = useState<TipoOperacion | null>(null)
   const [costo, setCosto] = useState("")
   const [comision, setComision] = useState("5")
@@ -130,6 +131,7 @@ export default function Home() {
 
   const reiniciar = () => {
     setTipoOperacion(null)
+    setMostrarBienvenida(false)
     setCosto("")
     setComision("5")
     setExclusiva(null)
@@ -142,15 +144,64 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_#dbeafe_0%,_#eff6ff_40%,_#f8fafc_100%)] px-4 py-8 md:py-12">
-      <div className="mx-auto w-full max-w-2xl">
-        <div className="mb-4 rounded-3xl border border-blue-100 bg-white/90 p-5 shadow-sm backdrop-blur md:mb-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">Tamivar</p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl">Tabulador de comisiones</h1>
-          <p className="mt-2 text-sm text-slate-600">{LEYENDA_IMPUESTOS}</p>
+    <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,_#bfdbfe_0%,_#eff6ff_45%,_#f8fafc_100%)] px-3 py-4 md:px-6 md:py-10">
+      <div className="pointer-events-none absolute -left-16 top-28 h-48 w-48 rounded-full bg-cyan-200/40 blur-3xl" />
+      <div className="pointer-events-none absolute -right-16 top-10 h-48 w-48 rounded-full bg-blue-300/40 blur-3xl" />
+
+      <div className="relative mx-auto w-full max-w-2xl">
+        <div className="mb-3 rounded-3xl border border-blue-100 bg-white/90 p-4 shadow-sm backdrop-blur md:mb-6 md:p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-blue-700">Tamivar</p>
+              <h1 className="mt-2 text-xl font-semibold tracking-tight text-slate-900 md:text-3xl">Tabulador de comisiones</h1>
+            </div>
+            {!mostrarBienvenida && (
+              <button
+                onClick={() => setMostrarBienvenida(true)}
+                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600"
+              >
+                Bienvenida
+              </button>
+            )}
+          </div>
+          <p className="mt-2 text-xs leading-relaxed text-slate-600 md:text-sm">{LEYENDA_IMPUESTOS}</p>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-blue-100/60 md:p-8">
+        <div className="rounded-3xl border border-slate-200/80 bg-white/95 p-4 shadow-xl shadow-blue-100/60 md:p-8">
+          {mostrarBienvenida ? (
+            <section className="space-y-5">
+              <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 p-5 text-white">
+                <p className="text-sm font-semibold uppercase tracking-wider text-blue-100">Bienvenido</p>
+                <h2 className="mt-2 text-2xl font-semibold leading-tight">Simula tu comision en menos de 5 minuto</h2>
+                <p className="mt-3 text-sm text-blue-50">
+                  Este tabulador te ayuda a calcular tu porcentaje segun el escenario de cierre. El resultado ya contempla descuentos aplicados.
+                </p>
+              </div>
+
+              <div className="grid gap-3">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-sm font-semibold text-slate-800">1. Elige tipo de operacion</p>
+                  <p className="mt-1 text-sm text-slate-600">Selecciona venta o renta para iniciar el flujo correcto.</p>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-sm font-semibold text-slate-800">2. Completa los datos</p>
+                  <p className="mt-1 text-sm text-slate-600">Responde preguntas y el sistema calcula tu porcentaje automaticamente.</p>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-sm font-semibold text-slate-800">3. Descarga tu ticket</p>
+                  <p className="mt-1 text-sm text-slate-600">Genera evidencia del desglose en formato imagen para compartir.</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setMostrarBienvenida(false)}
+                className="min-h-12 w-full rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-3 text-base font-semibold text-white shadow-lg shadow-blue-200 transition hover:brightness-105"
+              >
+                Comenzar simulacion
+              </button>
+            </section>
+          ) : (
+            <>
           {!tipoOperacion && (
             <section>
               <h2 className="text-lg font-semibold text-slate-900">1) Selecciona el tipo de operacion</h2>
@@ -464,6 +515,8 @@ export default function Home() {
                 Nueva simulacion
               </button>
             </section>
+          )}
+            </>
           )}
         </div>
       </div>
