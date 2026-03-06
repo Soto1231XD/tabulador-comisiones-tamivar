@@ -6,6 +6,7 @@ import {
   buildTicketText,
   getBaseMontos,
   getCasoPrincipal,
+  getDesgloseAsesor,
   getPorcentajeFinal,
   puedeVerResultadoVenta,
 } from "@/lib/tabulador/calculations"
@@ -49,9 +50,24 @@ export default function Home() {
   )
 
   const montoFinal = useMemo(() => {
-    if (!porcentajeFinal) return 0
-    return baseMontos.comisionNeta * (porcentajeFinal / 100)
-  }, [baseMontos.comisionNeta, porcentajeFinal])
+    return getDesgloseAsesor({
+      comisionPrincipal: baseMontos.comisionPrincipal,
+      comisionPrincipalRenta: baseMontos.comisionPrincipalRenta,
+      porcentajeFinal,
+      tipoOperacion,
+    }).comisionNetaAsesor
+  }, [baseMontos.comisionPrincipal, baseMontos.comisionPrincipalRenta, porcentajeFinal, tipoOperacion])
+
+  const desgloseAsesor = useMemo(
+    () =>
+      getDesgloseAsesor({
+        comisionPrincipal: baseMontos.comisionPrincipal,
+        comisionPrincipalRenta: baseMontos.comisionPrincipalRenta,
+        porcentajeFinal,
+        tipoOperacion,
+      }),
+    [baseMontos.comisionPrincipal, baseMontos.comisionPrincipalRenta, porcentajeFinal, tipoOperacion]
+  )
 
   const puedeVerResultado = useMemo(
     () =>
@@ -169,20 +185,20 @@ export default function Home() {
             <section className="space-y-5">
               <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 p-5 text-white">
                 <p className="text-sm font-semibold uppercase tracking-wider text-blue-100">Bienvenido</p>
-                <h2 className="mt-2 text-2xl font-semibold leading-tight">Simula tu comision en menos de 5 minuto</h2>
+                <h2 className="mt-2 text-2xl font-semibold leading-tight">Simula tu comisión en menos de 5 minutos</h2>
                 <p className="mt-3 text-sm text-blue-50">
-                  Este tabulador te ayuda a calcular tu porcentaje segun el escenario de cierre. El resultado ya contempla descuentos aplicados.
+                  Este tabulador te ayuda a calcular tu porcentaje según el escenario de cierre. El resultado ya contempla descuentos aplicados.
                 </p>
               </div>
 
               <div className="grid gap-3">
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm font-semibold text-slate-800">1. Elige tipo de operacion</p>
+                  <p className="text-sm font-semibold text-slate-800">1. Elige tipo de operación</p>
                   <p className="mt-1 text-sm text-slate-600">Selecciona venta o renta para iniciar el flujo correcto.</p>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                   <p className="text-sm font-semibold text-slate-800">2. Completa los datos</p>
-                  <p className="mt-1 text-sm text-slate-600">Responde preguntas y el sistema calcula tu porcentaje automaticamente.</p>
+                  <p className="mt-1 text-sm text-slate-600">Responde preguntas y el sistema calcula tu porcentaje automáticamente.</p>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                   <p className="text-sm font-semibold text-slate-800">3. Descarga tu ticket</p>
@@ -194,21 +210,21 @@ export default function Home() {
                 onClick={() => setMostrarBienvenida(false)}
                 className="min-h-12 w-full rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-3 text-base font-semibold text-white shadow-lg shadow-blue-200 transition hover:brightness-105"
               >
-                Comenzar simulacion
+                Comenzar simulación
               </button>
             </section>
           ) : (
             <>
           {!tipoOperacion && (
             <section>
-              <h2 className="text-lg font-semibold text-slate-900">1) Selecciona el tipo de operacion</h2>
+              <h2 className="text-lg font-semibold text-slate-900">1) Selecciona el tipo de operación</h2>
               <div className="mt-4 grid gap-3 md:grid-cols-2">
                 <button
                   onClick={() => setTipoOperacion("venta")}
                   className="rounded-2xl border border-slate-300 bg-white px-5 py-4 text-left transition hover:border-blue-400 hover:shadow-sm"
                 >
                   <p className="text-base font-semibold text-slate-900">Venta</p>
-                  <p className="mt-1 text-sm text-slate-500">Calcular reparto por porcentaje de comision.</p>
+                  <p className="mt-1 text-sm text-slate-500">Calcular reparto por porcentaje de comisión.</p>
                 </button>
 
                 <button
@@ -244,10 +260,16 @@ export default function Home() {
               {puedeVerResultadoRenta && (
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
                   <h3 className="text-lg font-semibold text-slate-900">Desglose</h3>
-                  <p className="mt-3 text-slate-700">
-                    Te corresponde el <span className="font-semibold">45%</span> de la comision principal que equivale a:
+                  <div className="mt-3 space-y-2 text-sm text-slate-700">
+                    <p>Costo de la propiedad: <span className="font-semibold">{formatMXN(baseMontos.costoNum)}</span></p>
+                    <p>Comisión general: <span className="font-semibold">{formatMXN(baseMontos.comisionPrincipalRenta)}</span></p>
+                    <p>Comisión bruta a asesor: <span className="font-semibold">{formatMXN(desgloseAsesor.comisionBrutaAsesor)}</span></p>
+                    <p>Impuestos (7%): <span className="font-semibold">{formatMXN(desgloseAsesor.impuestosAsesor)}</span></p>
+                  </div>
+                  <p className="mt-4 text-slate-700">
+                    Te corresponde el <span className="font-semibold">45%</span> de la comisión principal menos impuestos, equivalente a:
                   </p>
-                  <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">{formatMXN(baseMontos.montoRenta)} MXN</p>
+                  <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">{formatMXN(montoFinal)} MXN</p>
 
                   <button
                     onClick={descargarTicket}
@@ -264,7 +286,7 @@ export default function Home() {
                 onClick={reiniciar}
                 className="w-full rounded-2xl border border-slate-300 px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
               >
-                Nueva simulacion
+                Nueva simulación
               </button>
             </section>
           )}
@@ -287,7 +309,7 @@ export default function Home() {
                   </label>
 
                   <label className="block">
-                    <span className="mb-2 block text-sm font-medium text-slate-700">Comision</span>
+                    <span className="mb-2 block text-sm font-medium text-slate-700">Comisión</span>
                     <select
                       value={comision}
                       onChange={(e) => setComision(e.target.value)}
@@ -306,15 +328,15 @@ export default function Home() {
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">3) Responde el escenario</h2>
                 <div className="mt-4 space-y-4">
-                  <QuestionSiNo titulo="Es una propiedad exclusiva?" value={exclusiva} onChange={setExclusiva} />
-                  <QuestionSiNo titulo="Tu la enlistaste?" value={enlistaste} onChange={setEnlistaste} />
-                  <QuestionSiNo titulo="Tu la vendiste?" value={vendiste} onChange={setVendiste} />
+                  <QuestionSiNo titulo="¿Es una propiedad exclusiva?" value={exclusiva} onChange={setExclusiva} />
+                  <QuestionSiNo titulo="¿Tú la enlistaste?" value={enlistaste} onChange={setEnlistaste} />
+                  <QuestionSiNo titulo="¿Tú la vendiste?" value={vendiste} onChange={setVendiste} />
                 </div>
               </div>
 
               {casoPrincipal === "caso-pregunta-vendio" && (
                 <div>
-                  <h2 className="text-lg font-semibold text-slate-900">4) Quien vendio la casa?</h2>
+                  <h2 className="text-lg font-semibold text-slate-900">4) ¿Quién vendió la casa?</h2>
                   <div className="mt-3 grid gap-2 rounded-2xl bg-slate-100 p-1 md:grid-cols-2">
                     <button
                       onClick={() => setQuienVendio("broker-externo")}
@@ -339,7 +361,7 @@ export default function Home() {
               {casoPrincipal === "caso-equipo-tipo-asesor" && (
                 <div className="space-y-4">
                   <div>
-                    <h2 className="text-lg font-semibold text-slate-900">4) Fue en equipo con otro asesor?</h2>
+                    <h2 className="text-lg font-semibold text-slate-900">4) ¿Fue en equipo con otro asesor?</h2>
                     <div className="mt-3 grid gap-2 rounded-2xl bg-slate-100 p-1 md:grid-cols-2">
                       <button
                         onClick={() => setFueEnEquipoConOtroAsesor("si")}
@@ -347,7 +369,7 @@ export default function Home() {
                           fueEnEquipoConOtroAsesor === "si" ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
                         }`}
                       >
-                        Si
+                        Sí
                       </button>
                       <button
                         onClick={() => {
@@ -364,7 +386,7 @@ export default function Home() {
                   </div>
 
                   <div>
-                    <h2 className="text-lg font-semibold text-slate-900">5) Que tipo de asesor fue</h2>
+                    <h2 className="text-lg font-semibold text-slate-900">5) ¿Qué tipo de asesor fue?</h2>
                     <div className="mt-3 grid gap-2 rounded-2xl bg-slate-100 p-1 md:grid-cols-3">
                       <button
                         onClick={() => setTipoAsesorEquipo("interno")}
@@ -404,7 +426,7 @@ export default function Home() {
                     Para que este sistema te
                     pueda arrojar un dato
                     concreto, debes colocar por
-                    lo menos un &quot;SI&quot; en alguna
+                    lo menos un &quot;Sí&quot; en alguna
                     de las opciones
                   </p>
                   <button
@@ -418,54 +440,59 @@ export default function Home() {
 
               {exclusiva && enlistaste && vendiste && !casoPrincipal && !todasNoEnEscenarioVenta && (
                 <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                  Este caso aun no esta configurado en el tabulador actual.
+                  Este caso aún no está configurado en el tabulador actual.
                 </p>
               )}
 
               {puedeVerResultado && porcentajeFinal && (
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
                   <h3 className="text-lg font-semibold text-slate-900">Desglose</h3>
+                  <div className="mt-3 space-y-2 text-sm text-slate-700">
+                    <p>Costo de la propiedad: <span className="font-semibold">{formatMXN(baseMontos.costoNum)}</span></p>
+                    <p>Comisión general {comision}%: <span className="font-semibold">{formatMXN(baseMontos.comisionPrincipal)}</span></p>
+                    <p>Comisión bruta a asesor: <span className="font-semibold">{formatMXN(desgloseAsesor.comisionBrutaAsesor)}</span></p>
+                    <p>Impuestos (7%): <span className="font-semibold">{formatMXN(desgloseAsesor.impuestosAsesor)}</span></p>
+                  </div>
                   {casoPrincipal === "caso-equipo-tipo-asesor" &&
                   fueEnEquipoConOtroAsesor === "si" &&
                   tipoAsesorEquipo === "interno" ? (
-                    <p className="mt-3 text-slate-700">
-                      A los dos asesores les corresponde el <span className="font-semibold">30%</span> de la comision principal que
-                      equivale a:
+                    <p className="mt-4 text-slate-700">
+                      A los dos asesores les corresponde el <span className="font-semibold">30%</span> de la comisión principal menos impuestos, equivalente a:
                     </p>
                   ) : casoPrincipal === "caso-equipo-tipo-asesor" &&
                     fueEnEquipoConOtroAsesor === "si" &&
                     tipoAsesorEquipo === "externo" ? (
-                    <div className="mt-3 space-y-1 text-slate-700">
-                      <p>Broker externo tiene el cliente (Asesor interno hizo la referencia).</p>
+                    <div className="mt-4 space-y-1 text-slate-700">
+                      <p>Broker externo tiene el cliente (asesor interno hizo la referencia).</p>
                       <p>Tamivar tiene la propiedad.</p>
                       <p>
                         A ti te corresponde el <span className="font-semibold">7.5%</span>.
                       </p>
                     </div>
                   ) : (
-                    <p className="mt-3 text-slate-700">
-                      Te corresponde el <span className="font-semibold">{porcentajeFinal}%</span> de la comision principal que equivale a:
+                    <p className="mt-4 text-slate-700">
+                      Te corresponde el <span className="font-semibold">{porcentajeFinal}%</span> de la comisión principal menos impuestos, equivalente a:
                     </p>
                   )}
                   <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">{formatMXN(montoFinal)} MXN</p>
 
                   {casoPrincipal === "caso-pregunta-vendio" && quienVendio === "broker-externo" && (
                     <p className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-                      *Puede subir a 25% segun tu seguimiento en el proceso, que equivaldria a{" "}
+                      *Puede subir a 25% según tu seguimiento en el proceso, que equivaldría a{" "}
                       <span className="font-semibold">{formatMXN(baseMontos.montoPotencial25)}</span>.
                     </p>
                   )}
 
                   {casoPrincipal === "caso-10-directo" && (
                     <p className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-                      *Puede subir a 20% segun tu seguimiento en el proceso, que equivaldria a{" "}
+                      *Puede subir a 20% según tu seguimiento en el proceso, que equivaldría a{" "}
                       <span className="font-semibold">{formatMXN(baseMontos.montoPotencial20)}</span>.
                     </p>
                   )}
 
                   {casoPrincipal === "caso-10-directo" && (
                     <p className="mt-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
-                      Este porcentaje es lo mismo si lo vende un broker externo o interno.
+                      Este porcentaje es el mismo si lo vende un broker externo o interno.
                     </p>
                   )}
 
@@ -473,7 +500,7 @@ export default function Home() {
                     fueEnEquipoConOtroAsesor === "si" &&
                     tipoAsesorEquipo === "externo" && (
                       <p className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-                        *Puede subir un 5% mas segun tu seguimiento en el proceso, que equivaldria a{" "}
+                        *Puede subir un 5% más según tu seguimiento en el proceso, que equivaldría a{" "}
                         <span className="font-semibold">{formatMXN(baseMontos.montoPotencial5)}</span>.
                       </p>
                     )}
@@ -493,7 +520,7 @@ export default function Home() {
                 onClick={reiniciar}
                 className="w-full rounded-2xl border border-slate-300 px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
               >
-                Nueva simulacion
+                Nueva simulación
               </button>
             </section>
           )}

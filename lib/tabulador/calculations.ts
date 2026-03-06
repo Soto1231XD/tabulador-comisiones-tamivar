@@ -21,6 +21,12 @@ type BaseMontos = {
   montoPotencial5: number
 }
 
+type DesgloseAsesor = {
+  comisionBrutaAsesor: number
+  impuestosAsesor: number
+  comisionNetaAsesor: number
+}
+
 type TicketInput = BaseMontos & {
   casoPrincipal: CasoPrincipal | null
   fueEnEquipoConOtroAsesor: OpcionSiNo | null
@@ -52,6 +58,29 @@ export function getBaseMontos(costo: string, comision: string): BaseMontos {
     montoPotencial25: comisionNeta * 0.25,
     montoPotencial20: comisionNeta * 0.2,
     montoPotencial5: comisionNeta * 0.05,
+  }
+}
+
+export function getDesgloseAsesor(params: {
+  comisionPrincipal: number
+  comisionPrincipalRenta: number
+  porcentajeFinal: number | null
+  tipoOperacion: TipoOperacion | null
+}) : DesgloseAsesor {
+  const { comisionPrincipal, comisionPrincipalRenta, porcentajeFinal, tipoOperacion } = params
+
+  const comisionBrutaAsesor =
+    tipoOperacion === "renta"
+      ? comisionPrincipalRenta * 0.45
+      : comisionPrincipal * ((porcentajeFinal ?? 0) / 100)
+
+  const impuestosAsesor = comisionBrutaAsesor * 0.07
+  const comisionNetaAsesor = comisionBrutaAsesor - impuestosAsesor
+
+  return {
+    comisionBrutaAsesor,
+    impuestosAsesor,
+    comisionNetaAsesor,
   }
 }
 
@@ -143,14 +172,11 @@ export function puedeVerResultadoVenta(params: {
 export function buildTicketText(params: TicketInput) {
   const {
     casoPrincipal,
-    comisionNeta,
-    comisionNetaRenta,
     comisionNum,
     comisionPrincipal,
     comisionPrincipalRenta,
     costoNum,
     fueEnEquipoConOtroAsesor,
-    montoRenta,
     montoPotencial20,
     montoPotencial25,
     montoPotencial5,
@@ -163,16 +189,24 @@ export function buildTicketText(params: TicketInput) {
   } = params
 
   if (tipoOperacion === "renta" && puedeVerResultadoRenta) {
+    const { comisionBrutaAsesor, impuestosAsesor, comisionNetaAsesor } = getDesgloseAsesor({
+      comisionPrincipal,
+      comisionPrincipalRenta,
+      porcentajeFinal: 45,
+      tipoOperacion,
+    })
+
     return [
       "DESGLOSE",
       "",
-      "Operacion: RENTA",
-      `Costo: ${formatMXN(costoNum)}`,
-      `Comision principal: ${formatMXN(comisionPrincipalRenta)}`,
-      `Comision neta (7% ya descontado): ${formatMXN(comisionNetaRenta)}`,
+      "Operación: RENTA",
+      `Costo de la propiedad: ${formatMXN(costoNum)}`,
+      `Comisión general: ${formatMXN(comisionPrincipalRenta)}`,
+      `Comisión bruta a asesor: ${formatMXN(comisionBrutaAsesor)}`,
+      `Impuestos (7%): ${formatMXN(impuestosAsesor)}`,
       "",
-      "Te corresponde el 45% de la comision principal, equivalente a:",
-      `${formatMXN(montoRenta)} MXN`,
+      "Te corresponde el 45% de la comisión principal menos impuestos, equivalente a:",
+      `${formatMXN(comisionNetaAsesor)} MXN`,
       "",
       LEYENDA_IMPUESTOS,
     ].join("\n")
@@ -180,14 +214,20 @@ export function buildTicketText(params: TicketInput) {
 
   if (!puedeVerResultado || !porcentajeFinal) return ""
 
-  const montoFinal = comisionNeta * (porcentajeFinal / 100)
+  const { comisionBrutaAsesor, impuestosAsesor, comisionNetaAsesor } = getDesgloseAsesor({
+    comisionPrincipal,
+    comisionPrincipalRenta,
+    porcentajeFinal,
+    tipoOperacion,
+  })
   const lineas = [
     "DESGLOSE",
     "",
-    `Operacion: ${tipoOperacion?.toUpperCase()}`,
-    `Costo de propiedad: ${formatMXN(costoNum)}`,
-    `Comision principal (${comisionNum}%): ${formatMXN(comisionPrincipal)}`,
-    `Comision neta (7% ya descontado): ${formatMXN(comisionNeta)}`,
+    `Operación: ${tipoOperacion?.toUpperCase()}`,
+    `Costo de la propiedad: ${formatMXN(costoNum)}`,
+    `Comisión general ${comisionNum}%: ${formatMXN(comisionPrincipal)}`,
+    `Comisión bruta a asesor: ${formatMXN(comisionBrutaAsesor)}`,
+    `Impuestos (7%): ${formatMXN(impuestosAsesor)}`,
     "",
   ]
 
@@ -197,8 +237,8 @@ export function buildTicketText(params: TicketInput) {
     tipoAsesorEquipo === "interno"
   ) {
     lineas.push(
-      "A los dos asesores les corresponde el 30% de la comision principal, equivalente a:",
-      `${formatMXN(montoFinal)} MXN`,
+      "A los dos asesores les corresponde el 30% de la comisión principal menos impuestos, equivalente a:",
+      `${formatMXN(comisionNetaAsesor)} MXN`,
       ""
     )
   } else if (
@@ -210,11 +250,15 @@ export function buildTicketText(params: TicketInput) {
       "Broker externo tiene el cliente (Asesor interno hizo la referencia).",
       "Tamivar tiene la propiedad.",
       "A ti te corresponde el 7.5%.",
-      `${formatMXN(montoFinal)} MXN`,
+      `${formatMXN(comisionNetaAsesor)} MXN`,
       ""
     )
   } else {
-    lineas.push(`Te corresponde el ${porcentajeFinal}% de la comision principal, equivalente a:`, `${formatMXN(montoFinal)} MXN`, "")
+    lineas.push(
+      `Te corresponde el ${porcentajeFinal}% de la comisión principal menos impuestos, equivalente a:`,
+      `${formatMXN(comisionNetaAsesor)} MXN`,
+      ""
+    )
   }
 
   if (casoPrincipal === "caso-pregunta-vendio" && quienVendio === "broker-externo") {

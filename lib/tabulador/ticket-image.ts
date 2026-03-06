@@ -127,7 +127,7 @@ export function downloadTicketAsImage(ticketTexto: string) {
 
   ctx.fillStyle = "#ffffff"
   ctx.font = "700 42px Arial"
-  ctx.fillText("TICKET DE COMISION", outerX + contentPadding, outerY + 90)
+  ctx.fillText("TICKET DE COMISIÓN", outerX + contentPadding, outerY + 90)
 
   const dateLabel = new Intl.DateTimeFormat("es-MX", {
     year: "numeric",
