@@ -13,7 +13,6 @@ import { LEYENDA_IMPUESTOS } from "@/lib/tabulador/constants"
 import { formatMXN, formatThousands, sanitizeNumericInput } from "@/lib/tabulador/format"
 import { downloadTicketAsImage } from "@/lib/tabulador/ticket-image"
 import type {
-  FueConBrokerExterno,
   OpcionSiNo,
   QuienVendio,
   TipoAsesorEquipo,
@@ -30,7 +29,6 @@ export default function Home() {
   const [enlistaste, setEnlistaste] = useState<OpcionSiNo | null>(null)
   const [vendiste, setVendiste] = useState<OpcionSiNo | null>(null)
   const [quienVendio, setQuienVendio] = useState<QuienVendio | null>(null)
-  const [fueConBrokerExterno, setFueConBrokerExterno] = useState<FueConBrokerExterno | null>(null)
   const [fueEnEquipoConOtroAsesor, setFueEnEquipoConOtroAsesor] = useState<OpcionSiNo | null>(null)
   const [tipoAsesorEquipo, setTipoAsesorEquipo] = useState<TipoAsesorEquipo>("na")
   const costoFormateado = formatThousands(costo)
@@ -43,12 +41,11 @@ export default function Home() {
     () =>
       getPorcentajeFinal({
         casoPrincipal,
-        fueConBrokerExterno,
         fueEnEquipoConOtroAsesor,
         quienVendio,
         tipoAsesorEquipo,
       }),
-    [casoPrincipal, fueConBrokerExterno, fueEnEquipoConOtroAsesor, quienVendio, tipoAsesorEquipo]
+    [casoPrincipal, fueEnEquipoConOtroAsesor, quienVendio, tipoAsesorEquipo]
   )
 
   const montoFinal = useMemo(() => {
@@ -64,7 +61,6 @@ export default function Home() {
         costoNum: baseMontos.costoNum,
         enlistaste,
         exclusiva,
-        fueConBrokerExterno,
         fueEnEquipoConOtroAsesor,
         porcentajeFinal,
         tipoAsesorEquipo,
@@ -78,7 +74,6 @@ export default function Home() {
       casoPrincipal,
       enlistaste,
       exclusiva,
-      fueConBrokerExterno,
       fueEnEquipoConOtroAsesor,
       porcentajeFinal,
       tipoAsesorEquipo,
@@ -103,7 +98,6 @@ export default function Home() {
       buildTicketText({
         ...baseMontos,
         casoPrincipal,
-        fueConBrokerExterno,
         fueEnEquipoConOtroAsesor,
         porcentajeFinal,
         puedeVerResultado,
@@ -115,7 +109,6 @@ export default function Home() {
     [
       baseMontos,
       casoPrincipal,
-      fueConBrokerExterno,
       fueEnEquipoConOtroAsesor,
       porcentajeFinal,
       puedeVerResultado,
@@ -143,7 +136,6 @@ export default function Home() {
     setEnlistaste(null)
     setVendiste(null)
     setQuienVendio(null)
-    setFueConBrokerExterno(null)
     setFueEnEquipoConOtroAsesor(null)
     setTipoAsesorEquipo("na")
   }
@@ -344,30 +336,6 @@ export default function Home() {
                 </div>
               )}
 
-              {casoPrincipal === "caso-pregunta-broker-externo" && (
-                <div>
-                  <h2 className="text-lg font-semibold text-slate-900">4) FUE CON BROKER EXTERNO?</h2>
-                  <div className="mt-3 grid gap-2 rounded-2xl bg-slate-100 p-1 md:grid-cols-2">
-                    <button
-                      onClick={() => setFueConBrokerExterno("si")}
-                      className={`rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
-                        fueConBrokerExterno === "si" ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
-                      }`}
-                    >
-                      Si
-                    </button>
-                    <button
-                      onClick={() => setFueConBrokerExterno("no")}
-                      className={`rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
-                        fueConBrokerExterno === "no" ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
-                      }`}
-                    >
-                      No
-                    </button>
-                  </div>
-                </div>
-              )}
-
               {casoPrincipal === "caso-equipo-tipo-asesor" && (
                 <div className="space-y-4">
                   <div>
@@ -468,7 +436,7 @@ export default function Home() {
                     fueEnEquipoConOtroAsesor === "si" &&
                     tipoAsesorEquipo === "externo" ? (
                     <div className="mt-3 space-y-1 text-slate-700">
-                      <p>Broker externo tiene el cliente.</p>
+                      <p>Broker externo tiene el cliente (Asesor interno hizo la referencia).</p>
                       <p>Tamivar tiene la propiedad.</p>
                       <p>
                         A ti te corresponde el <span className="font-semibold">7.5%</span>.
@@ -488,10 +456,16 @@ export default function Home() {
                     </p>
                   )}
 
-                  {casoPrincipal === "caso-pregunta-broker-externo" && fueConBrokerExterno === "si" && (
+                  {casoPrincipal === "caso-10-directo" && (
                     <p className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
                       *Puede subir a 20% segun tu seguimiento en el proceso, que equivaldria a{" "}
                       <span className="font-semibold">{formatMXN(baseMontos.montoPotencial20)}</span>.
+                    </p>
+                  )}
+
+                  {casoPrincipal === "caso-10-directo" && (
+                    <p className="mt-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+                      Este porcentaje es lo mismo si lo vende un broker externo o interno.
                     </p>
                   )}
 

@@ -2,7 +2,6 @@ import { LEYENDA_IMPUESTOS } from "./constants"
 import { formatMXN } from "./format"
 import type {
   CasoPrincipal,
-  FueConBrokerExterno,
   OpcionSiNo,
   QuienVendio,
   TipoAsesorEquipo,
@@ -24,7 +23,6 @@ type BaseMontos = {
 
 type TicketInput = BaseMontos & {
   casoPrincipal: CasoPrincipal | null
-  fueConBrokerExterno: FueConBrokerExterno | null
   fueEnEquipoConOtroAsesor: OpcionSiNo | null
   porcentajeFinal: number | null
   puedeVerResultado: boolean
@@ -64,7 +62,8 @@ export function getCasoPrincipal(
 ): CasoPrincipal | null {
   if (exclusiva === "si" && enlistaste === "si" && vendiste === "si") return "caso-70"
   if (exclusiva === "no" && enlistaste === "no" && vendiste === "si") return "caso-equipo-tipo-asesor"
-  if (exclusiva === "no" && enlistaste === "si" && vendiste === "si") return "caso-pregunta-broker-externo"
+  if (exclusiva === "no" && enlistaste === "si" && vendiste === "si") return "caso-65-directo"
+  if (exclusiva === "no" && enlistaste === "si" && vendiste === "no") return "caso-10-directo"
   if (exclusiva === "si" && enlistaste === "no" && vendiste === "si") return "caso-45"
   if (exclusiva === "si" && enlistaste === "si" && vendiste === "no") return "caso-pregunta-vendio"
   return null
@@ -72,14 +71,15 @@ export function getCasoPrincipal(
 
 export function getPorcentajeFinal(params: {
   casoPrincipal: CasoPrincipal | null
-  fueConBrokerExterno: FueConBrokerExterno | null
   fueEnEquipoConOtroAsesor: OpcionSiNo | null
   quienVendio: QuienVendio | null
   tipoAsesorEquipo: TipoAsesorEquipo
 }) {
-  const { casoPrincipal, fueConBrokerExterno, fueEnEquipoConOtroAsesor, quienVendio, tipoAsesorEquipo } = params
+  const { casoPrincipal, fueEnEquipoConOtroAsesor, quienVendio, tipoAsesorEquipo } = params
 
   if (casoPrincipal === "caso-70") return 70
+  if (casoPrincipal === "caso-65-directo") return 65
+  if (casoPrincipal === "caso-10-directo") return 10
   if (casoPrincipal === "caso-equipo-tipo-asesor" && fueEnEquipoConOtroAsesor === "no" && tipoAsesorEquipo === "na")
     return 25
   if (
@@ -96,8 +96,6 @@ export function getPorcentajeFinal(params: {
   ) {
     return 7.5
   }
-  if (casoPrincipal === "caso-pregunta-broker-externo" && fueConBrokerExterno === "si") return 10
-  if (casoPrincipal === "caso-pregunta-broker-externo" && fueConBrokerExterno === "no") return 65
   if (casoPrincipal === "caso-45") return 45
   if (casoPrincipal === "caso-pregunta-vendio" && quienVendio === "broker-externo") return 15
   if (casoPrincipal === "caso-pregunta-vendio" && quienVendio === "tamivar") return 40
@@ -110,7 +108,6 @@ export function puedeVerResultadoVenta(params: {
   costoNum: number
   enlistaste: OpcionSiNo | null
   exclusiva: OpcionSiNo | null
-  fueConBrokerExterno: FueConBrokerExterno | null
   fueEnEquipoConOtroAsesor: OpcionSiNo | null
   porcentajeFinal: number | null
   tipoAsesorEquipo: TipoAsesorEquipo
@@ -124,7 +121,6 @@ export function puedeVerResultadoVenta(params: {
     costoNum,
     enlistaste,
     exclusiva,
-    fueConBrokerExterno,
     fueEnEquipoConOtroAsesor,
     porcentajeFinal,
     tipoAsesorEquipo,
@@ -137,7 +133,6 @@ export function puedeVerResultadoVenta(params: {
   if (!costoNum || !comisionNum) return false
   if (!exclusiva || !enlistaste || !vendiste) return false
   if (casoPrincipal === "caso-pregunta-vendio" && !quienVendio) return false
-  if (casoPrincipal === "caso-pregunta-broker-externo" && !fueConBrokerExterno) return false
   if (casoPrincipal === "caso-equipo-tipo-asesor" && !fueEnEquipoConOtroAsesor) return false
   if (casoPrincipal === "caso-equipo-tipo-asesor" && fueEnEquipoConOtroAsesor === "si" && tipoAsesorEquipo === "na")
     return false
@@ -154,7 +149,6 @@ export function buildTicketText(params: TicketInput) {
     comisionPrincipal,
     comisionPrincipalRenta,
     costoNum,
-    fueConBrokerExterno,
     fueEnEquipoConOtroAsesor,
     montoRenta,
     montoPotencial20,
@@ -213,7 +207,7 @@ export function buildTicketText(params: TicketInput) {
     tipoAsesorEquipo === "externo"
   ) {
     lineas.push(
-      "Broker externo tiene el cliente.",
+      "Broker externo tiene el cliente (Asesor interno hizo la referencia).",
       "Tamivar tiene la propiedad.",
       "A ti te corresponde el 7.5%.",
       `${formatMXN(montoFinal)} MXN`,
@@ -227,8 +221,9 @@ export function buildTicketText(params: TicketInput) {
     lineas.push(`*Puede subir a 25% segun tu seguimiento en el proceso, que equivaldria a ${formatMXN(montoPotencial25)}.`, "")
   }
 
-  if (casoPrincipal === "caso-pregunta-broker-externo" && fueConBrokerExterno === "si") {
+  if (casoPrincipal === "caso-10-directo") {
     lineas.push(`*Puede subir a 20% segun tu seguimiento en el proceso, que equivaldria a ${formatMXN(montoPotencial20)}.`, "")
+    lineas.push("Este porcentaje es lo mismo si lo vende un broker externo o interno.", "")
   }
 
   if (
