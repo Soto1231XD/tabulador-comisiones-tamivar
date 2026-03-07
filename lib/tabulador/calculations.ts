@@ -262,11 +262,11 @@ export function buildTicketText(params: TicketInput) {
   }
 
   if (casoPrincipal === "caso-pregunta-vendio" && quienVendio === "broker-externo") {
-    lineas.push(`*Puede subir a 25% segun tu seguimiento en el proceso, que equivaldria a ${formatMXN(montoPotencial25)}.`, "")
+    lineas.push(`*Puede subir a 25% según tu seguimiento en el proceso, que equivaldría a ${formatMXN(montoPotencial25)}.`, "")
   }
 
   if (casoPrincipal === "caso-10-directo") {
-    lineas.push(`*Puede subir a 20% segun tu seguimiento en el proceso, que equivaldria a ${formatMXN(montoPotencial20)}.`, "")
+    lineas.push(`*Puede subir a 20% según tu seguimiento en el proceso, que equivaldría a ${formatMXN(montoPotencial20)}.`, "")
     lineas.push("Este porcentaje es lo mismo si lo vende un broker externo o interno.", "")
   }
 
@@ -275,7 +275,7 @@ export function buildTicketText(params: TicketInput) {
     fueEnEquipoConOtroAsesor === "si" &&
     tipoAsesorEquipo === "externo"
   ) {
-    lineas.push(`*Puede subir un 5% mas segun tu seguimiento en el proceso, que equivaldria a ${formatMXN(montoPotencial5)}.`, "")
+    lineas.push(`*Puede subir un 5% más según tu seguimiento en el proceso, que equivaldría a ${formatMXN(montoPotencial5)}.`, "")
   }
 
   lineas.push(LEYENDA_IMPUESTOS)
